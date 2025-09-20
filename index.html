@@ -5,32 +5,462 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control de Invitados</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    h1 { text-align: center; }
-    #busqueda { display: block; margin: 10px auto 30px auto; padding: 5px 10px; width: 90%; max-width: 400px; font-size: 16px; }
-    .cumpleanero { text-align: center; margin-bottom: 40px; }
-    .dni { max-width: 200px; display: block; margin: 0 auto 15px auto; border: 1px solid #ccc; }
-    .invitado { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 5px 0; }
-    .tachado { text-decoration: line-through; color: gray; }
-    button { padding: 3px 8px; cursor: pointer; border-radius: 4px; border: none; }
-    button.ingreso { background-color: #4CAF50; color: white; }
-    button.deshacer { background-color: #f44336; color: white; }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      background: #f9f9f9; 
+      margin: 0;
+    }
+    
+    h1 { 
+      text-align: center; 
+      color: #333;
+      margin-bottom: 30px;
+    }
+    
+    #busqueda { 
+      display: block; 
+      margin: 10px auto 30px auto; 
+      padding: 10px 15px; 
+      width: 90%; 
+      max-width: 400px; 
+      font-size: 16px; 
+      border: 2px solid #ddd;
+      border-radius: 25px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    
+    #busqueda:focus {
+      border-color: #4CAF50;
+    }
+    
+    .cumpleanero { 
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 30px;
+    }
+    
+    .cumpleanero h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+      text-transform: capitalize;
+      font-size: 1.4em;
+    }
+    
+    .dni { 
+      max-width: 200px; 
+      display: block; 
+      margin: 0 auto 20px auto; 
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .invitados-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .invitado { 
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      min-height: 40px;
+    }
+    
+    .invitado.vacio {
+      display: none;
+    }
+    
+    .nombre-invitado {
+      text-align: left;
+      font-weight: 500;
+      color: #333;
+      text-transform: capitalize;
+    }
+    
+    .tachado { 
+      text-decoration: line-through; 
+      color: #666;
+      opacity: 0.6;
+    }
+    
+    .botones-container {
+      display: flex;
+      gap: 5px;
+    }
+    
+    button { 
+      padding: 6px 12px; 
+      cursor: pointer; 
+      border-radius: 5px; 
+      border: none;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.2s;
+      min-width: 70px;
+    }
+    
+    button.ingreso { 
+      background-color: #28a745; 
+      color: white; 
+    }
+    
+    button.ingreso:hover {
+      background-color: #218838;
+    }
+    
+    button.deshacer { 
+      background-color: #dc3545; 
+      color: white; 
+    }
+    
+    button.deshacer:hover {
+      background-color: #c82333;
+    }
+    
+    .contador {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    @media (max-width: 600px) {
+      .cumpleanero {
+        margin: 0 10px 20px 10px;
+        padding: 15px;
+      }
+      
+      .invitado {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        text-align: center;
+      }
+      
+      .botones-container {
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>SECRET EVENT</h1>
   <input type="text" id="busqueda" placeholder="Buscar por nombre o apellido...">
+  <div class="contador" id="contador"></div>
   <div id="lista"></div>
 
   <script>
+    const invitadosData = [
+      {
+        "cumpleanero": "alfonso gimena soledad",
+        "dni": "gimena soledad alfonso.jpeg",
+        "invitados": [
+          { "nombre": "macarena benítez", "id": "alfonso_inv1" },
+          { "nombre": "candela gonzález", "id": "alfonso_inv2" },
+          { "nombre": "lisandro talavera", "id": "alfonso_inv3" },
+          { "nombre": "", "id": "alfonso_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "barcelo melina ayelen",
+        "dni": "melina ayelen barcelo.jpeg",
+        "invitados": [
+          { "nombre": "Garcete Lautaro", "id": "barcelo_inv1" },
+          { "nombre": "Lindemann Matías", "id": "barcelo_inv2" },
+          { "nombre": "Nuñez Luciana", "id": "barcelo_inv3" },
+          { "nombre": "Rodriguez Gonzalo", "id": "barcelo_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "benitez alesandra evelyn nicole",
+        "dni": "alesandra evelyn nicole benitez.jpeg",
+        "invitados": [
+          { "nombre": "Leonardo fabian Crizante", "id": "benitez_inv1" },
+          { "nombre": "Emilia María Antonia jara", "id": "benitez_inv2" },
+          { "nombre": "Ismael José Luis vera", "id": "benitez_inv3" },
+          { "nombre": "Tomas Ernesto Crizante", "id": "benitez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "de oliveira beniccio hernan",
+        "dni": "beniccio hernan de oliveira.jpeg",
+        "invitados": [
+          { "nombre": "Gonzalo riedenauer", "id": "oliveira_inv1" },
+          { "nombre": "Agustín schapovaloff", "id": "oliveira_inv2" },
+          { "nombre": "Juan Ángel solis", "id": "oliveira_inv3" },
+          { "nombre": "Emiliano arenhardt", "id": "oliveira_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "elizaul julia milagros",
+        "dni": "julia milagros elizaul.jpeg",
+        "invitados": [
+          { "nombre": "villasanti dalma", "id": "elizaul_inv1" },
+          { "nombre": "Barbonallia Thomas", "id": "elizaul_inv2" },
+          { "nombre": "Gonzalez Johansen Leandro", "id": "elizaul_inv3" },
+          { "nombre": "", "id": "elizaul_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "ferreira nestor javier",
+        "dni": "nestor javier ferreira.jpeg",
+        "invitados": [
+          { "nombre": "Agustina Magali Caballero", "id": "ferreira_inv1" },
+          { "nombre": "Camila de los Ángeles Agustina Martínez", "id": "ferreira_inv2" },
+          { "nombre": "Froschke Juliana Katherine.", "id": "ferreira_inv3" },
+          { "nombre": "Maciel Guadalupe Luján", "id": "ferreira_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "figueredo dorcas janet",
+        "dni": "dorcas janet figueredo.jpeg",
+        "invitados": [
+          { "nombre": "Alan Florentin", "id": "figueredo_inv1" },
+          { "nombre": "Fabricio Resquin", "id": "figueredo_inv2" },
+          { "nombre": "Lucas Casco", "id": "figueredo_inv3" },
+          { "nombre": "Sofía Sánchez", "id": "figueredo_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "gimenez cristhian santiago",
+        "dni": "cristhian santiago gimenez.jpeg",
+        "invitados": [
+          { "nombre": "Miranda Fernando", "id": "gimenez_inv1" },
+          { "nombre": "Lopez Benicio", "id": "gimenez_inv2" },
+          { "nombre": "Dos Santos Franco", "id": "gimenez_inv3" },
+          { "nombre": "Hinc Facundo", "id": "gimenez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "giubi maria lujan",
+        "dni": "maria lujan giubi.jpeg",
+        "invitados": [
+          { "nombre": "Belen Villagra", "id": "giubi_inv1" },
+          { "nombre": "Ciara Chaihort", "id": "giubi_inv2" },
+          { "nombre": "Constanza Melgarejo", "id": "giubi_inv3" },
+          { "nombre": "Lourdes Peña", "id": "giubi_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "hiller magali tamara",
+        "dni": "magali tamara hiller.jpeg",
+        "invitados": [
+          { "nombre": "luisana do santos", "id": "hiller_inv1" },
+          { "nombre": "Nahiara memmel", "id": "hiller_inv2" },
+          { "nombre": "tamara Bogado", "id": "hiller_inv3" },
+          { "nombre": "Carlos volz", "id": "hiller_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "insfran maria angelica",
+        "dni": "maria angelica insfran.jpeg",
+        "invitados": [
+          { "nombre": "Ezequiel Giménez", "id": "insfran_inv1" },
+          { "nombre": "Adri drewes", "id": "insfran_inv2" },
+          { "nombre": "Joaquín Espinoza", "id": "insfran_inv3" },
+          { "nombre": "Jeremías Reggio", "id": "insfran_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "krauss mia natali",
+        "dni": "mia natali krauss.jpeg",
+        "invitados": [
+          { "nombre": "Guadalupe Rivas", "id": "krauss_inv1" },
+          { "nombre": "Zacaria Victoria", "id": "krauss_inv2" },
+          { "nombre": "Coria Marchessini Naiara", "id": "krauss_inv3" },
+          { "nombre": "Krauss Thiago", "id": "krauss_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "lopez ayelen guadalupe",
+        "dni": "ayelen guadalupe lopez.jpeg",
+        "invitados": [
+          { "nombre": "Angel Pellizzer", "id": "lopez_inv1" },
+          { "nombre": "Agustina cáceres", "id": "lopez_inv2" },
+          { "nombre": "Fabián Pereyra", "id": "lopez_inv3" },
+          { "nombre": "Simon Duarte", "id": "lopez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "martinez iris geraldine",
+        "dni": "iris geraldine martinez.jpeg",
+        "invitados": [
+          { "nombre": "Taboada Zaira", "id": "martinez_inv1" },
+          { "nombre": "Brisa Cardozo", "id": "martinez_inv2" },
+          { "nombre": "Vergara Valentina", "id": "martinez_inv3" },
+          { "nombre": "Kukla Camila", "id": "martinez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "medina gaston ariel",
+        "dni": "gaston ariel medina.jpeg",
+        "invitados": [
+          { "nombre": "Franco cañete", "id": "medina_inv1" },
+          { "nombre": "Ezequiel ramos", "id": "medina_inv2" },
+          { "nombre": "Juan cueva", "id": "medina_inv3" },
+          { "nombre": "Facundo cuevas", "id": "medina_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "miranda maria antonela",
+        "dni": "maria antonela miranda.jpeg",
+        "invitados": [
+          { "nombre": "Dalila Ayelen Schendelbek", "id": "miranda_inv1" },
+          { "nombre": "Evelin Eliane Martim", "id": "miranda_inv2" },
+          { "nombre": "Selene Marisol Martinez", "id": "miranda_inv3" },
+          { "nombre": "Tobias nicolas mora", "id": "miranda_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "nuñez josefina",
+        "dni": "josefina nuñez.jpeg",
+        "invitados": [
+          { "nombre": "Fredi Alonso", "id": "nunez_inv1" },
+          { "nombre": "Santiago Bottcher", "id": "nunez_inv2" },
+          { "nombre": "", "id": "nunez_inv3" },
+          { "nombre": "", "id": "nunez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "ortega julieta",
+        "dni": "julieta ortega.jpeg",
+        "invitados": [
+          { "nombre": "Belén Cardozo", "id": "ortega1_inv1" },
+          { "nombre": "Angy Rivas", "id": "ortega1_inv2" },
+          { "nombre": "Sofía Villalba", "id": "ortega1_inv3" },
+          { "nombre": "Matías Rivero", "id": "ortega1_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "ortega nailen agustina",
+        "dni": "nailen agustina ortega.jpeg",
+        "invitados": [
+          { "nombre": "Ivana Almeida", "id": "ortega2_inv1" },
+          { "nombre": "Milagros Benítez", "id": "ortega2_inv2" },
+          { "nombre": "Rodrigo Fernández", "id": "ortega2_inv3" },
+          { "nombre": "", "id": "ortega2_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "peralta paulina abigail",
+        "dni": "paulina abigail peralta.jpeg",
+        "invitados": [
+          { "nombre": "Candela Ocampo", "id": "peralta_inv1" },
+          { "nombre": "Benjamín Benitez", "id": "peralta_inv2" },
+          { "nombre": "Joaquín Figueredo", "id": "peralta_inv3" },
+          { "nombre": "Luana Paiva", "id": "peralta_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "resquin paula soledad",
+        "dni": "paula soledad resquin.jpeg",
+        "invitados": [
+          { "nombre": "Samara Magali Resquin", "id": "resquin_inv1" },
+          { "nombre": "Thiago Gabriel Gonzalez", "id": "resquin_inv2" },
+          { "nombre": "Micaela Leticia Maidana", "id": "resquin_inv3" },
+          { "nombre": "Catalina Victoria Ocampos Kleinbielen", "id": "resquin_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "rodriguez gerardo daniel",
+        "dni": "gerardo daniel rodriguez.jpeg",
+        "invitados": [
+          { "nombre": "Cardozo valentín", "id": "rodriguez_inv1" },
+          { "nombre": "Talavera nahuel", "id": "rodriguez_inv2" },
+          { "nombre": "Rodríguez juan", "id": "rodriguez_inv3" },
+          { "nombre": "Suárez franco", "id": "rodriguez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "rojas rodrigo joaquin",
+        "dni": "rodrigo joaquin rojas.jpeg",
+        "invitados": [
+          { "nombre": "Benja Rojas", "id": "rojas_inv1" },
+          { "nombre": "Elian Schimpf", "id": "rojas_inv2" },
+          { "nombre": "Gonzalo Talavera", "id": "rojas_inv3" },
+          { "nombre": "Lautaro Gomez", "id": "rojas_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "santa cruz maira yanina",
+        "dni": "maira yanina santa cruz.jpeg",
+        "invitados": [
+          { "nombre": "Karen flores", "id": "santa_inv1" },
+          { "nombre": "Angela Camacho", "id": "santa_inv2" },
+          { "nombre": "Mirna Camacho", "id": "santa_inv3" },
+          { "nombre": "Lucas mallorquín", "id": "santa_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "saucedo daira ailen",
+        "dni": "daira ailen saucedo.jpeg",
+        "invitados": [
+          { "nombre": "Julian Pro", "id": "saucedo_inv1" },
+          { "nombre": "Maxi Berdum", "id": "saucedo_inv2" },
+          { "nombre": "Melisa Kozak", "id": "saucedo_inv3" },
+          { "nombre": "Fernando Benítez", "id": "saucedo_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "vazquez naiara virginia belen",
+        "dni": "naiara virginia belen vazquez.jpeg",
+        "invitados": [
+          { "nombre": "Noemi Kopeczny", "id": "vazquez_inv1" },
+          { "nombre": "Ezequiel Amarilla", "id": "vazquez_inv2" },
+          { "nombre": "Zami Roke", "id": "vazquez_inv3" },
+          { "nombre": "Fátima Martínez", "id": "vazquez_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "villasanti benjamin carlos",
+        "dni": "benjamin carlos villasanti.jpeg",
+        "invitados": [
+          { "nombre": "Flecha Fernanda Ailen", "id": "villasanti_inv1" },
+          { "nombre": "Avril Estefanía Acosta", "id": "villasanti_inv2" },
+          { "nombre": "Nahiara olivera", "id": "villasanti_inv3" },
+          { "nombre": "", "id": "villasanti_inv4" }
+        ]
+      },
+      {
+        "cumpleanero": "villalba kathia ailen",
+        "dni": "kathia ailen villalba.jpeg",
+        "invitados": [
+          { "nombre": "Brenda Stepanenco", "id": "villalba_inv1" },
+          { "nombre": "Malena Bastarrachea", "id": "villalba_inv2" },
+          { "nombre": "Juliana Lemes", "id": "villalba_inv3" },
+          { "nombre": "Yamila Ramirez", "id": "villalba_inv4" }
+        ]
+      }
+    ];
+
     // Guardar estado en localStorage
     function guardarEstado() {
       const invitados = document.querySelectorAll(".invitado");
       const estado = {};
       invitados.forEach(inv => {
-        estado[inv.id] = inv.querySelector("span").classList.contains("tachado");
+        const span = inv.querySelector("span");
+        if (span) {
+          estado[inv.id] = span.classList.contains("tachado");
+        }
       });
       localStorage.setItem("estadoInvitados", JSON.stringify(estado));
+      actualizarContador();
     }
 
     function cargarEstado() {
@@ -38,42 +468,103 @@
       Object.keys(estado).forEach(id => {
         const invitado = document.getElementById(id);
         if(invitado) {
-          if(estado[id]) invitado.querySelector("span").classList.add("tachado");
-          else invitado.querySelector("span").classList.remove("tachado");
+          const span = invitado.querySelector("span");
+          if(span) {
+            if(estado[id]) span.classList.add("tachado");
+            else span.classList.remove("tachado");
+          }
         }
       });
+      actualizarContador();
     }
 
     function marcarIngreso(id) {
-      document.querySelector(`#${id} span`).classList.add("tachado");
-      guardarEstado();
+      const span = document.querySelector(`#${id} span`);
+      if(span) {
+        span.classList.add("tachado");
+        guardarEstado();
+      }
     }
 
     function deshacerIngreso(id) {
-      document.querySelector(`#${id} span`).classList.remove("tachado");
-      guardarEstado();
+      const span = document.querySelector(`#${id} span`);
+      if(span) {
+        span.classList.remove("tachado");
+        guardarEstado();
+      }
+    }
+
+    function actualizarContador() {
+      const totalInvitados = document.querySelectorAll(".invitado:not(.vacio)").length;
+      const ingresados = document.querySelectorAll(".tachado").length;
+      const contador = document.getElementById("contador");
+      contador.textContent = `Ingresados: ${ingresados} / ${totalInvitados}`;
     }
 
     function generarLista(datos) {
+      // Ordenar alfabéticamente por cumpleañero
+      const datosOrdenados = datos.sort((a, b) => 
+        a.cumpleanero.localeCompare(b.cumpleanero, 'es', { sensitivity: 'base' })
+      );
+
       const contenedor = document.getElementById("lista");
       contenedor.innerHTML = "";
 
-      datos.forEach(cumple => {
+      datosOrdenados.forEach(cumple => {
         const bloque = document.createElement("div");
         bloque.classList.add("cumpleanero");
-        bloque.innerHTML = `<h2>${cumple.cumpleanero}</h2>
-                            <img src="img/${cumple.dni}" class="dni">`;
+        
+        // Crear el HTML del cumpleañero
+        const titulo = document.createElement("h2");
+        titulo.textContent = cumple.cumpleanero;
+        
+        const img = document.createElement("img");
+        img.src = `img/${cumple.dni}`;
+        img.classList.add("dni");
+        img.onerror = function() {
+          this.style.display = 'none';
+        };
+        
+        const contenedorInvitados = document.createElement("div");
+        contenedorInvitados.classList.add("invitados-container");
 
-        cumple.invitados.forEach(inv => {
+        // Filtrar invitados con nombre
+        const invitadosConNombre = cumple.invitados.filter(inv => inv.nombre.trim() !== "");
+
+        invitadosConNombre.forEach(inv => {
           const divInv = document.createElement("div");
           divInv.classList.add("invitado");
           divInv.id = inv.id;
-          divInv.innerHTML = `<span>${inv.nombre}</span>
-                              <button class="ingreso" onclick="marcarIngreso('${inv.id}')">Ingreso</button>
-                              <button class="deshacer" onclick="deshacerIngreso('${inv.id}')">Deshacer</button>`;
-          bloque.appendChild(divInv);
+          
+          const nombreSpan = document.createElement("span");
+          nombreSpan.classList.add("nombre-invitado");
+          nombreSpan.textContent = inv.nombre;
+          
+          const botonesContainer = document.createElement("div");
+          botonesContainer.classList.add("botones-container");
+          
+          const btnIngreso = document.createElement("button");
+          btnIngreso.classList.add("ingreso");
+          btnIngreso.textContent = "Ingreso";
+          btnIngreso.onclick = () => marcarIngreso(inv.id);
+          
+          const btnDeshacer = document.createElement("button");
+          btnDeshacer.classList.add("deshacer");
+          btnDeshacer.textContent = "Deshacer";
+          btnDeshacer.onclick = () => deshacerIngreso(inv.id);
+          
+          botonesContainer.appendChild(btnIngreso);
+          botonesContainer.appendChild(btnDeshacer);
+          
+          divInv.appendChild(nombreSpan);
+          divInv.appendChild(botonesContainer);
+          
+          contenedorInvitados.appendChild(divInv);
         });
 
+        bloque.appendChild(titulo);
+        bloque.appendChild(img);
+        bloque.appendChild(contenedorInvitados);
         contenedor.appendChild(bloque);
       });
 
@@ -82,21 +573,25 @@
 
     // Búsqueda case-insensitive
     document.getElementById("busqueda").addEventListener("input", function() {
-      const filtro = this.value.toLowerCase();
+      const filtro = this.value.toLowerCase().trim();
       document.querySelectorAll(".cumpleanero").forEach(cumple => {
-        const textoCumple = cumple.querySelector("h2").innerText.toLowerCase();
-        const invitados = Array.from(cumple.querySelectorAll(".invitado span"))
-                              .map(s => s.innerText.toLowerCase())
-                              .join(" ");
-        const mostrar = textoCumple.includes(filtro) || invitados.includes(filtro);
+        if (filtro === "") {
+          cumple.style.display = "";
+          return;
+        }
+        
+        const textoCumple = cumple.querySelector("h2").textContent.toLowerCase();
+        const nombresInvitados = Array.from(cumple.querySelectorAll(".nombre-invitado"))
+                                    .map(s => s.textContent.toLowerCase())
+                                    .join(" ");
+        
+        const mostrar = textoCumple.includes(filtro) || nombresInvitados.includes(filtro);
         cumple.style.display = mostrar ? "" : "none";
       });
     });
 
-    fetch('invitados.json')
-      .then(res => res.json())
-      .then(datos => generarLista(datos))
-      .catch(err => console.error("Error al cargar invitados.json:", err));
+    // Inicializar la aplicación
+    generarLista(invitadosData);
   </script>
 </body>
 </html>
