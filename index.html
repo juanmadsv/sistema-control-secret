@@ -551,11 +551,18 @@
       if (invitados.length > 0 && invitados.length === invitadosTachados.length) {
         // Todos los invitados están tachados
         cumpleanero.classList.add('completo');
-        cumpleanero.onclick = null;
+        cumpleanero.onclick = () => desbloquearCumpleanos(cumpleanero);
       } else {
         // No todos están tachados
         cumpleanero.classList.remove('completo');
-        cumpleanero.onclick = null;
+        // Usar un flag para evitar ejecución inmediata
+        cumpleanero.dataset.bloqueado = 'true';
+        cumpleanero.onclick = (e) => {
+          e.stopPropagation();
+          if (cumpleanero.dataset.bloqueado === 'true') {
+            desbloquearCumpleanos(cumpleanero);
+          }
+        };
       }
     }
     
@@ -644,12 +651,13 @@
           const btnIngreso = document.createElement("button");
           btnIngreso.classList.add("ingreso");
           btnIngreso.textContent = "Ingreso";
-          btnIngreso.onclick = () => marcarIngreso(inv.id);
+          btnIngreso.onclick = (e) => { e.stopPropagation(); marcarIngreso(inv.id); };
           
           const btnDeshacer = document.createElement("button");
           btnDeshacer.classList.add("deshacer");
           btnDeshacer.textContent = "Deshacer";
-          btnDeshacer.onclick = () => deshacerIngreso(inv.id);
+          btnDeshacer.onclick = (e) => { e.stopPropagation(); deshacerIngreso(inv.id); };
+
           
           botonesContainer.appendChild(btnIngreso);
           botonesContainer.appendChild(btnDeshacer);
@@ -673,6 +681,54 @@
     // Búsqueda case-insensitive
     document.getElementById("busqueda").addEventListener("input", function() {
       const filtro = this.value.toLowerCase().trim();
+      // Verificar si se busca "todos"
+    if (filtro === "todos") {
+      // Crear botón si no existe
+      let botonTodos = document.getElementById("boton-todos");
+      if (!botonTodos) {
+        botonTodos = document.createElement("button");
+        botonTodos.id = "boton-todos";
+        botonTodos.textContent = "Desbloquear todos los cumpleaños";
+        botonTodos.style.cssText = "display: block; margin: 20px auto; padding: 15px 30px; background: #404fee; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;";
+        botonTodos.onclick = () => {
+          const password = prompt("Ingrese la contraseña para desbloquear todos:");
+          if (password === "secret") {
+            document.querySelectorAll('.cumpleanero.completo').forEach(cumple => {
+              // Remover clase de completo y restablecer estado
+              cumple.classList.remove('completo');
+              cumple.dataset.bloqueado = 'false';
+              cumple.onclick = null;
+              cumple.style.opacity = "";
+              cumple.style.filter = "";
+              
+              // Destachar todos los invitados de este cumpleaños
+              cumple.querySelectorAll('.tachado').forEach(invitado => {
+                invitado.classList.remove('tachado');
+              });
+            });
+
+            // Guardar el nuevo estado y actualizar contador
+            guardarEstado();
+            alert("Todos los cumpleaños han sido desbloqueados");
+            // Limpiar búsqueda y volver al menú principal
+            document.getElementById("busqueda").value = "";
+            const botonTodos = document.getElementById("boton-todos");
+            if (botonTodos) botonTodos.style.display = "none";
+            document.querySelectorAll(".cumpleanero").forEach(cumple => cumple.style.display = "");
+          } else if (password !== null) {
+            alert("Contraseña incorrecta");
+          }
+        };
+        document.getElementById("contador").after(botonTodos);
+      }
+      botonTodos.style.display = "block";
+      document.querySelectorAll(".cumpleanero").forEach(cumple => cumple.style.display = "none");
+      return;
+    } else {
+      // Ocultar botón si existe y no se busca "todos"
+      const botonTodos = document.getElementById("boton-todos");
+      if (botonTodos) botonTodos.style.display = "none";
+    }
       document.querySelectorAll(".cumpleanero").forEach(cumple => {
         if (filtro === "") {
           cumple.style.display = "";
