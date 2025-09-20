@@ -7,18 +7,19 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
     h1 { text-align: center; }
-    h2 { margin-top: 40px; color: #333; }
-    .dni { max-width: 200px; border: 1px solid #ccc; margin-bottom: 10px; display: block; }
-    .invitado { margin: 8px 0; }
+    #busqueda { display: block; margin: 10px auto 30px auto; padding: 5px 10px; width: 90%; max-width: 400px; font-size: 16px; }
+    .cumpleanero { text-align: center; margin-bottom: 40px; }
+    .dni { max-width: 200px; display: block; margin: 0 auto 15px auto; border: 1px solid #ccc; }
+    .invitado { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 5px 0; }
     .tachado { text-decoration: line-through; color: gray; }
-    button { margin-left: 10px; padding: 3px 8px; cursor: pointer; }
-    button.ingreso { background-color: #4CAF50; color: white; border: none; border-radius: 4px; }
-    button.deshacer { background-color: #f44336; color: white; border: none; border-radius: 4px; }
+    button { padding: 3px 8px; cursor: pointer; border-radius: 4px; border: none; }
+    button.ingreso { background-color: #4CAF50; color: white; }
+    button.deshacer { background-color: #f44336; color: white; }
   </style>
 </head>
 <body>
   <h1>SECRET EVENT</h1>
-  <p>Lista de Cumpleaños</p>
+  <input type="text" id="busqueda" placeholder="Buscar por nombre o apellido...">
   <div id="lista"></div>
 
   <script>
@@ -27,24 +28,18 @@
       const invitados = document.querySelectorAll(".invitado");
       const estado = {};
       invitados.forEach(inv => {
-        const id = inv.id;
-        const tachado = inv.querySelector("span").classList.contains("tachado");
-        estado[id] = tachado;
+        estado[inv.id] = inv.querySelector("span").classList.contains("tachado");
       });
       localStorage.setItem("estadoInvitados", JSON.stringify(estado));
     }
 
-    // Cargar estado desde localStorage
     function cargarEstado() {
       const estado = JSON.parse(localStorage.getItem("estadoInvitados")) || {};
       Object.keys(estado).forEach(id => {
         const invitado = document.getElementById(id);
-        if (invitado) {
-          if (estado[id]) {
-            invitado.querySelector("span").classList.add("tachado");
-          } else {
-            invitado.querySelector("span").classList.remove("tachado");
-          }
+        if(invitado) {
+          if(estado[id]) invitado.querySelector("span").classList.add("tachado");
+          else invitado.querySelector("span").classList.remove("tachado");
         }
       });
     }
@@ -59,31 +54,23 @@
       guardarEstado();
     }
 
-    // Generar lista de invitados desde JSON
     function generarLista(datos) {
       const contenedor = document.getElementById("lista");
       contenedor.innerHTML = "";
 
-      const cumpleañeros = [...new Set(datos.map(d => d.Cumpleañero))];
-
-      cumpleañeros.forEach(cumple => {
-        const invitadosCumple = datos.filter(d => d.Cumpleañero === cumple);
-
+      datos.forEach(cumple => {
         const bloque = document.createElement("div");
-        bloque.innerHTML = `
-          <h2>Cumpleañero: ${cumple}</h2>
-          <img src="img/${invitadosCumple[0]["DNI Imagen"]}" class="dni">
-        `;
+        bloque.classList.add("cumpleanero");
+        bloque.innerHTML = `<h2>${cumple.cumpleanero}</h2>
+                            <img src="img/${cumple.dni}" class="dni">`;
 
-        invitadosCumple.forEach(inv => {
+        cumple.invitados.forEach(inv => {
           const divInv = document.createElement("div");
           divInv.classList.add("invitado");
-          divInv.id = inv["ID Invitado"];
-          divInv.innerHTML = `
-            <span>${inv.Invitado}</span>
-            <button class="ingreso" onclick="marcarIngreso('${inv["ID Invitado"]}')">Ingreso</button>
-            <button class="deshacer" onclick="deshacerIngreso('${inv["ID Invitado"]}')">Deshacer</button>
-          `;
+          divInv.id = inv.id;
+          divInv.innerHTML = `<span>${inv.nombre}</span>
+                              <button class="ingreso" onclick="marcarIngreso('${inv.id}')">Ingreso</button>
+                              <button class="deshacer" onclick="deshacerIngreso('${inv.id}')">Deshacer</button>`;
           bloque.appendChild(divInv);
         });
 
@@ -93,11 +80,23 @@
       cargarEstado();
     }
 
-    // Cargar JSON automáticamente desde GitHub Pages
+    // Búsqueda case-insensitive
+    document.getElementById("busqueda").addEventListener("input", function() {
+      const filtro = this.value.toLowerCase();
+      document.querySelectorAll(".cumpleanero").forEach(cumple => {
+        const textoCumple = cumple.querySelector("h2").innerText.toLowerCase();
+        const invitados = Array.from(cumple.querySelectorAll(".invitado span"))
+                              .map(s => s.innerText.toLowerCase())
+                              .join(" ");
+        const mostrar = textoCumple.includes(filtro) || invitados.includes(filtro);
+        cumple.style.display = mostrar ? "" : "none";
+      });
+    });
+
     fetch('invitados.json')
-      .then(response => response.json())
+      .then(res => res.json())
       .then(datos => generarLista(datos))
-      .catch(error => console.error("Error al cargar invitados.json:", error));
+      .catch(err => console.error("Error al cargar invitados.json:", err));
   </script>
 </body>
 </html>
